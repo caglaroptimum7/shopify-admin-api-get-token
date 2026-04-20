@@ -22,7 +22,6 @@ interface AppState {
 }
 
 const DEFAULT_SCOPES = 'read_products,write_products,read_files,write_files,read_themes';
-const REDIRECT_URI = 'http://localhost:3456/callback';
 
 export default function App() {
   const [state, setState] = useState<AppState>(() => {
@@ -34,6 +33,9 @@ export default function App() {
       shop: '',
     };
   });
+
+  const baseUrl = window.location.origin;
+  const redirectUri = `${baseUrl}/callback`;
 
   useEffect(() => {
     localStorage.setItem('shopify_wizard_state', JSON.stringify(state));
@@ -52,20 +54,25 @@ export default function App() {
 
         <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
           <Routes>
-            <Route path="/" element={<Wizard state={state} setState={setState} />} />
+            <Route path="/" element={<Wizard state={state} setState={setState} baseUrl={baseUrl} redirectUri={redirectUri} />} />
             <Route path="/callback" element={<Callback state={state} />} />
           </Routes>
         </div>
         
         <footer className="mt-8 text-center text-slate-400 text-sm">
-          <p>This tool is for local development. Your credentials are stored in your browser's local storage.</p>
+          <p>This tool is for development. Your credentials are stored in your browser's local storage.</p>
         </footer>
       </div>
     </div>
   );
 }
 
-function Wizard({ state, setState }: { state: AppState, setState: React.Dispatch<React.SetStateAction<AppState>> }) {
+function Wizard({ state, setState, baseUrl, redirectUri }: { 
+  state: AppState, 
+  setState: React.Dispatch<React.SetStateAction<AppState>>,
+  baseUrl: string,
+  redirectUri: string
+}) {
   const [step, setStep] = useState(1);
 
   const updateState = (key: keyof AppState, value: string) => {
@@ -74,7 +81,7 @@ function Wizard({ state, setState }: { state: AppState, setState: React.Dispatch
 
   const handleAuthorize = () => {
     const shop = state.shop.includes('.myshopify.com') ? state.shop : `${state.shop}.myshopify.com`;
-    const authUrl = `https://${shop}/admin/oauth/authorize?client_id=${state.clientId}&scope=${state.scopes}&redirect_uri=${encodeURIComponent(REDIRECT_URI)}`;
+    const authUrl = `https://${shop}/admin/oauth/authorize?client_id=${state.clientId}&scope=${state.scopes}&redirect_uri=${encodeURIComponent(redirectUri)}`;
     window.location.href = authUrl;
   };
 
@@ -216,13 +223,13 @@ function Wizard({ state, setState }: { state: AppState, setState: React.Dispatch
               <div className="p-4 bg-slate-50 rounded-xl border border-slate-200">
                 <p className="text-[10px] text-slate-400 uppercase font-bold tracking-wider mb-1">App URL</p>
                 <div className="flex items-center justify-between gap-2">
-                  <code className="text-sm text-indigo-600 font-mono break-all">http://localhost:3456</code>
+                  <code className="text-sm text-indigo-600 font-mono break-all">{baseUrl}</code>
                 </div>
               </div>
               <div className="p-4 bg-slate-50 rounded-xl border border-slate-200">
                 <p className="text-[10px] text-slate-400 uppercase font-bold tracking-wider mb-1">Allowed redirection URL(s)</p>
                 <div className="flex items-center justify-between gap-2">
-                  <code className="text-sm text-indigo-600 font-mono break-all">http://localhost:3456/callback</code>
+                  <code className="text-sm text-indigo-600 font-mono break-all">{redirectUri}</code>
                 </div>
               </div>
             </div>
