@@ -7,21 +7,20 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 const app = express();
-const PORT = 3456;
+const PORT = process.env.PORT || 3456;
 
 app.use(cors());
 app.use(express.json());
 
-// Serve static files from the React app build directory
-const distPath = path.join(__dirname, '../dist/client');
-app.use(express.static(distPath));
-
-// Handle the OAuth callback by redirecting back to the Vite dev server (port 3000)
-// This ensures the user stays in the development environment with HMR.
+// Handle the OAuth callback by redirecting back to the UI (root)
+// On Vercel, the app might be on the same URL as the API
 app.get('/callback', (req, res) => {
   const query = new URLSearchParams(req.query as any).toString();
-  console.log('Callback received, redirecting to dev server...');
-  res.redirect(`http://localhost:3000/callback?${query}`);
+  console.log('Callback received, redirecting to app...');
+  
+  // If we are in development, redirect to port 3000, otherwise redirect to root
+  const target = process.env.NODE_ENV === 'development' ? 'http://localhost:3000' : '';
+  res.redirect(`${target}/callback?${query}`);
 });
 
 // API endpoint to exchange the OAuth code for an access token
@@ -54,15 +53,11 @@ app.post('/api/exchange-token', async (req, res) => {
   }
 });
 
-// For any other request, serve the React app (client-side routing)
-app.get(/.*/, (req, res) => {
-  const indexPath = path.join(distPath, 'index.html');
-  res.sendFile(indexPath);
-});
+// For Vercel, we only listen locally or when explicitly run
+if (process.env.NODE_ENV !== 'production' && require.main === module) {
+  app.listen(PORT, () => {
+    console.log(`🚀 Local Server running at http://localhost:${PORT}`);
+  });
+}
 
-app.listen(PORT, () => {
-  console.log(`
-🚀 Shopify Token Wizard Server running at:
-   http://localhost:${PORT}
-  `);
-});
+export default app;

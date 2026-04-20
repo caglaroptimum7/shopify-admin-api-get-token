@@ -7,9 +7,9 @@
     "forceConsistentCasingInFileNames": true,
     "strict": true,
     "skipLibCheck": true,
-    "rootDir": "server",
-    "outDir": "dist/server",
+    "rootDir": ".",
+    "outDir": "dist",
     "ignoreDeprecations": "6.0"
   },
-  "include": ["server/**/*"]
+  "include": ["api/**/*"]
 }
