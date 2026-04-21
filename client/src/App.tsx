@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Routes, Route, useNavigate, useSearchParams } from 'react-router-dom';
 import { 
   Rocket, 
@@ -267,8 +267,12 @@ function Callback({ state }: { state: AppState }) {
   const [token, setToken] = useState<string | null>(null);
   const [scopes, setScopes] = useState<string | null>(null);
   const navigate = useNavigate();
+  const exchangedRef = useRef(false);
 
   useEffect(() => {
+    if (exchangedRef.current) return;
+    exchangedRef.current = true;
+
     const exchangeToken = async () => {
       const code = searchParams.get('code');
       const shop = searchParams.get('shop');
